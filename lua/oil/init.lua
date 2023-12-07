@@ -533,12 +533,12 @@ M.select = function(opts, callback)
     end
     local url = scheme .. dir .. entry.name
     local is_directory = entry.type == "directory"
-      or (
-        entry.type == "link"
-        and entry.meta
-        and entry.meta.link_stat
-        and entry.meta.link_stat.type == "directory"
-      )
+        or (
+          entry.type == "link"
+          and entry.meta
+          and entry.meta.link_stat
+          and entry.meta.link_stat.type == "directory"
+        )
     if is_directory then
       url = url .. "/"
       -- If this is a new directory BUT we think we already have an entry with this name, disallow
@@ -607,11 +607,24 @@ M.select = function(opts, callback)
           cmd = "buffer"
         end
       end
-      vim.cmd({
-        cmd = cmd,
-        args = { filebufnr },
-        mods = mods,
-      })
+      if vim.endswith(normalized_url, ".zip") then
+        local zip_cmd = vim.fn.input(
+          "What do I do with this zip? Enter nothing to cancel.\nCommand (unzip <filename> <your input>): ")
+        if zip_cmd == "" then
+          vim.notify("Cancelling zip action..")
+        else
+		  vim.cmd.nohlsearch()
+          local final_zip_cmd = "unzip " .. normalized_url .. " " .. zip_cmd
+          vim.notify("Running: " .. final_zip_cmd)
+          vim.fn.system(final_zip_cmd)
+        end
+      else
+        vim.cmd({
+          cmd = cmd,
+          args = { filebufnr },
+          mods = mods,
+        })
+      end
       if opts.preview then
         vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
         vim.w.oil_entry_id = entry.id
@@ -626,9 +639,9 @@ M.select = function(opts, callback)
       return finish(err)
     end
     if
-      opts.close
-      and vim.api.nvim_win_is_valid(prev_win)
-      and prev_win ~= vim.api.nvim_get_current_win()
+        opts.close
+        and vim.api.nvim_win_is_valid(prev_win)
+        and prev_win ~= vim.api.nvim_get_current_win()
     then
       vim.api.nvim_win_call(prev_win, function()
         M.close()
@@ -796,7 +809,7 @@ local function restore_alt_buf()
         -- If we are editing the same buffer that we started oil from, set the alternate to be
         -- what it was before we opened oil
         local has_orig_alt, alt_buffer =
-          pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
+            pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
         if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
           vim.fn.setreg("#", alt_buffer)
         end
